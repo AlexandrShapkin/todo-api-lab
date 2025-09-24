@@ -1,0 +1,517 @@
+openapi: '3.0.3'
+info:
+  title: ToDo API
+  version: '1.0'
+servers:
+  - url: "{protocol}://{host}:{port}/v1"
+    variables:
+      protocol:
+        default: http
+        enum:
+          - http
+          - https
+      host:
+        default: localhost
+      port:
+        default: "8080"
+paths:
+  /auth/register:
+    post:
+      operationId: registerUser
+      description: Регистрация нового пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: "user"
+                password:
+                  type: string
+                  example: "password1234"
+      responses:
+        "201":
+          description: Успешная регистрация
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Validation error"
+  
+  /auth/login:
+    post:
+      operationId: loginUser
+      description: Авторизация пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: "user"
+                password:
+                  type: string
+                  example: "password1234"
+      responses:
+        "200":
+          description: Успешная регистрация
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Validation error"
+
+  /auth/logout:
+    post:
+      operationId: userLogout
+      security:
+        - BearerAuth: []
+      description: Разлогин
+      responses:
+        "204":
+          description: Успешный разлогин
+
+  /auth/me:
+    get:
+      operationId: userGetMe
+      security:
+        - BearerAuth: []
+      description: Получить текущего пользователя
+      responses:
+        "200":
+          description: Найденные данные пользователя
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Неверный токен авторизации
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid token"
+        "404":
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Subject user not found"
+
+  /tasks:
+    get:
+      operationId: getAllTasks
+      security:
+        - BearerAuth: []
+      description: Получить полный список задач пользователя
+      parameters:
+        - name: completed
+          in: query
+          description: Статус завершенности задачи
+          required: false
+          schema:
+            type: boolean
+            enum:
+              - true
+              - false
+        - name: dueBefore
+          in: query
+          description: Задачи с дедлайном до указанной даты
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: "2025-09-20T19:01:00+07:00"
+        - name: dueAfter
+          in: query
+          description: Задачи с дедлайном после указанной даты
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: "2025-09-20T19:01:00+07:00"
+        - name: sort
+          in: query
+          description: Способ сортировки списка
+          required: false
+          explode: false
+          schema:
+            type: string
+            enum:
+              - dueTime
+              - createdAt
+            example: "dueTime"
+        - name: order
+          in: query
+          description: Порядок сортировки списка
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+            example: desc
+        - name: limit
+          in: query
+          description: Количество задач на страницу
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            example: 20
+        - name: offset
+          in: query
+          description: Смещение от начала выборки
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            example: 40
+      responses:
+        "200":
+          description: Список задач пользователя
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+        "401":
+          description: Неверный токен авторизации
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid token"
+    post:
+      operationId: createTask
+      security:
+        - BearerAuth: []
+      description: Добавить новую задачу
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RawTask"
+      responses:
+        "201":
+          description: Задача успешно добавлена
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "401":
+          description: Неверный токен авторизации
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid token"
+
+  /tasks/{id}:
+    get:
+      operationId: getTaskById
+      security:
+        - BearerAuth: []
+      description: Получить задачу по её id
+      parameters:
+        - name: id
+          in: path
+          description: Id Задачи
+          required: true
+          schema:
+            type: string
+          example: "12345"
+      responses:
+        "200":
+          description: Задача получена
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "401":
+          description: Неверный токен авторизации
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid token"
+        "404":
+          description: Задача не найдена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Task not found"
+    patch:
+      operationId: updateTaskFieldsById
+      security:
+        - BearerAuth: []
+      description: Обновить отдельные поля задачи по её ID
+      parameters:
+        - name: id
+          in: path
+          description: Id Задачи
+          required: true
+          schema:
+            type: string
+          example: "12345"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OptionalTaskRows"
+      responses:
+        "200":
+          description: Задача обновлена
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "401":
+          description: Неверный токен авторизации
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid token"
+        "404":
+          description: Задача не найдена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Task not found"
+    put:
+      operationId: updateTaskById
+      security:
+        - BearerAuth: []
+      description: Обновить задачу по её ID
+      parameters:
+        - name: id
+          in: path
+          description: Id Задачи
+          required: true
+          schema:
+            type: string
+          example: "12345"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RawTask"
+      responses:
+        "200":
+          description: Задача обновлена
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "401":
+          description: Неверный токен авторизации
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid token"
+        "404":
+          description: Задача не найдена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Task not found"
+    delete:
+      operationId: deleteTaskById
+      security:
+        - BearerAuth: []
+      description: Удалить задачу по её ID
+      parameters:
+        - name: id
+          in: path
+          description: Id Задачи
+          required: true
+          schema:
+            type: string
+          example: "12345"
+      responses:
+        "204":
+          description: Задача удалена
+        "401":
+          description: Неверный токен авторизации
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid token"
+        "404":
+          description: Задача не найдена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Task not found"
+
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    AuthResponse:
+      type: object
+      properties:
+        username:
+          type: string
+          example: "user"
+        userId:
+          type: string
+          example: "12345"
+        accessToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30
+        accessExpiresIn:
+          type: integer
+          example: 1516239022
+        refreshToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30
+        refreshExpiresIn:
+          type: integer
+          example: 1516239022
+
+    User:
+      type: object
+      properties:
+        username:
+          type: string
+          example: "user"
+        userId:
+          type: string
+          example: "12345"
+
+    RawTask:
+      type: object
+      required:
+        - title
+        - dueTime
+      properties:
+        title:
+          type: string
+          example: "Task title"
+        description:
+          type: string
+          example: "Some task description"
+        dueTime:
+          type: string
+          format: date-time
+          example: "2025-09-20T19:01:00+07:00"
+        completed:
+          type: boolean
+
+    OptionalTaskRows:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "Task title"
+        description:
+          type: string
+          example: "Some task description"
+        dueTime:
+          type: string
+          format: date-time
+          example: "2025-09-20T19:01:00+07:00"
+        completed:
+          type: boolean
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "12345"
+        title:
+          type: string
+          example: "Task title"
+        description:
+          type: string
+          example: "Some task description"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-09-19T19:01:00+07:00"
+        dueTime:
+          type: string
+          format: date-time
+          example: "2025-09-20T19:01:00+07:00"
+        completed:
+          type: boolean
