@@ -51,7 +51,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.service.Register(body.Username, body.Password)
+	resp, err := h.service.Login(body.Username, body.Password)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
