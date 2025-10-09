@@ -34,6 +34,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	resp, err := h.service.Register(body.Username, body.Password)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err.Error())
+		return
 	}
 
 	utils.WriteJSON(w, http.StatusCreated, resp)
