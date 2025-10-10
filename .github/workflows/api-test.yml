@@ -1,0 +1,63 @@
+name: API Test
+
+on:
+  push:
+    paths:
+      - 'go/**'
+      - 'tests/**'
+  pull_request:
+    paths:
+      - 'go/**'
+      - 'tests/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t todo-go ./go
+
+      - name: Run container
+        run: docker run -d -p 8080:8080 --name todo-go todo-go
+
+      - name: Wait for up
+        run: |
+          for i in {1..10}; do
+            if curl -sSf http://localhost:8080/v1/auth/me > /dev/null; then
+              echo "Is up"
+              break
+            fi
+            echo "Waiting..."
+            sleep 2
+          done
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up test environment
+        working-directory: tests
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -U pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run API tests
+        working-directory: tests
+        env:
+          API_BASE_URL: http://localhost:8080/v1
+        run: |
+          source venv/bin/activate
+          pytest -v --maxfail=1 --disable-warnings
+
+      - name: Print server logs
+        if: always()
+        run: docker logs todo-go || true
+
+      - name: Stop and clean up container
+        if: always()
+        run: docker rm -f todo-go || true
