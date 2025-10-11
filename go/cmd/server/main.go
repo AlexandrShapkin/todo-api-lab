@@ -19,11 +19,11 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/v1/auth/register", authHandler.Register)
-	mux.HandleFunc("/v1/auth/login", authHandler.Login)
-	mux.HandleFunc("/v1/auth/logout", authHandler.Logout)
-	mux.HandleFunc("/v1/auth/me", authHandler.Me)
-	mux.HandleFunc("/v1/tasks", func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/v1/auth/register", handlers.Logging(http.HandlerFunc(authHandler.Register)))
+	mux.Handle("/v1/auth/login", handlers.Logging(http.HandlerFunc(authHandler.Login)))
+	mux.Handle("/v1/auth/logout", handlers.Logging(http.HandlerFunc(authHandler.Logout)))
+	mux.Handle("/v1/auth/me", handlers.Logging(http.HandlerFunc(authHandler.Me)))
+	mux.Handle("/v1/tasks", handlers.Logging(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			taskHandler.List(w, r)
@@ -32,8 +32,8 @@ func main() {
 		default:
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		}
-	})
-	mux.HandleFunc("/v1/tasks/", func(w http.ResponseWriter, r *http.Request) {
+	})))
+	mux.Handle("/v1/tasks/", handlers.Logging(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			taskHandler.GetByID(w, r)
@@ -46,7 +46,7 @@ func main() {
 		default:
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		}
-	})
+	})))
 
 	log.Println("Server running on :8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))
