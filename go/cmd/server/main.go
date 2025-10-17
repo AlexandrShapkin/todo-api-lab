@@ -23,8 +23,8 @@ func main() {
 	mux.Handle("/v1/auth/register", http.HandlerFunc(authHandler.Register))
 	mux.Handle("/v1/auth/login", http.HandlerFunc(authHandler.Login))
 	mux.Handle("/v1/auth/logout", http.HandlerFunc(authHandler.Logout))
-	mux.Handle("/v1/auth/me", http.HandlerFunc(authHandler.Me))
-	mux.Handle("/v1/tasks", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/v1/auth/me", middleware.NewJWT(http.HandlerFunc(authHandler.Me)))
+	mux.Handle("/v1/tasks", middleware.NewJWT(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			taskHandler.List(w, r)
@@ -33,8 +33,8 @@ func main() {
 		default:
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		}
-	}))
-	mux.Handle("/v1/tasks/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	})))
+	mux.Handle("/v1/tasks/", middleware.NewJWT(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			taskHandler.GetByID(w, r)
@@ -47,7 +47,7 @@ func main() {
 		default:
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		}
-	}))
+	})))
 
 	lmux := middleware.NewLogger(mux)
 

@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/AlexandrShapkin/todo-api-lab-go-shared/auth"
 	"github.com/AlexandrShapkin/todo-api-lab-go-shared/models"
 	"github.com/AlexandrShapkin/todo-api-lab-go-shared/utils"
+	"github.com/AlexandrShapkin/todo-api-lab/go/internal/handlers/middleware"
 	"github.com/AlexandrShapkin/todo-api-lab/go/internal/services"
 )
 
@@ -22,10 +22,9 @@ func NewTaskHandler(s *services.TaskService) *TaskHandler {
 }
 
 func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
-	token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-	userID, err := auth.ValidateToken(token)
-	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, "invalid token")
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok {
+		utils.WriteError(w, http.StatusInternalServerError, "can not parse user id")
 		return
 	}
 
@@ -40,10 +39,9 @@ func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TaskHandler) List(w http.ResponseWriter, r *http.Request) {
-	token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-	userID, err := auth.ValidateToken(token)
-	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, "invalid token")
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok {
+		utils.WriteError(w, http.StatusInternalServerError, "can not parse user id")
 		return
 	}
 
@@ -53,12 +51,6 @@ func (h *TaskHandler) List(w http.ResponseWriter, r *http.Request) {
 
 func (h *TaskHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/v1/tasks/")
-	token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-	_, err := auth.ValidateToken(token)
-	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, "invalid token")
-		return
-	}
 
 	task := h.service.GetByID(id)
 	if task == nil {
@@ -71,12 +63,6 @@ func (h *TaskHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 func (h *TaskHandler) Update(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/v1/tasks/")
-	token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-	_, err := auth.ValidateToken(token)
-	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, "invalid token")
-		return
-	}
 
 	var body models.OptionalTaskRows
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -95,12 +81,6 @@ func (h *TaskHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 func (h *TaskHandler) Replace(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/v1/tasks/")
-	token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-	_, err := auth.ValidateToken(token)
-	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, "invalid token")
-		return
-	}
 
 	var body models.RawTask
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -124,12 +104,6 @@ func (h *TaskHandler) Replace(w http.ResponseWriter, r *http.Request) {
 
 func (h *TaskHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/v1/tasks/")
-	token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-	_, err := auth.ValidateToken(token)
-	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, "invalid token")
-		return
-	}
 
 	h.service.Delete(id)
 	w.WriteHeader(http.StatusNoContent)
