@@ -3,10 +3,9 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 
-	"github.com/AlexandrShapkin/todo-api-lab-go-shared/auth"
 	"github.com/AlexandrShapkin/todo-api-lab-go-shared/utils"
+	"github.com/AlexandrShapkin/todo-api-lab/go/internal/handlers/middleware"
 	"github.com/AlexandrShapkin/todo-api-lab/go/internal/services"
 )
 
@@ -65,10 +64,9 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
-	token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-	userID, err := auth.ValidateToken(token)
-	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, "invalid token")
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok {
+		utils.WriteError(w, http.StatusInternalServerError, "can not parse user id")
 		return
 	}
 
