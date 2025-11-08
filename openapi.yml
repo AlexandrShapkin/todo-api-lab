@@ -1,7 +1,7 @@
 openapi: '3.0.3'
 info:
   title: ToDo API
-  version: '1.0'
+  version: '1.1'
 servers:
   - url: "{protocol}://{host}:{port}/v1"
     variables:
@@ -84,6 +84,50 @@ paths:
                   error:
                     type: string
                     example: "Validation error"
+
+  /auth/refresh:
+    post:
+      operationId: refreshTokens
+      description: Обновление токенов доступа по refresh токену
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30
+      responses:
+        "200":
+          description: Токены успешно обновлены
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Validation error"
+        "401":
+          description: Невалидный refresh токен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid refresh token"
 
   /auth/logout:
     post:
