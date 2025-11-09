@@ -68,6 +68,27 @@ func (a *AuthService) Login(username, password string) (*models.AuthResponse, er
 	}, nil
 }
 
+func (a *AuthService) Refresh(userID string) (*models.AuthResponse, error) {
+	user := a.storage.GetUserByID(userID)
+	if user == nil {
+		return nil, errors.New("invalid credentials")
+	}
+
+	access, aexp, refresh, rexp, err := auth.GenerateTokenPair(user.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate token pair: %v", err)
+	}
+
+	return &models.AuthResponse{
+		Username:         user.Username,
+		UserID:           user.ID,
+		AccessToken:      access,
+		AccessExpiresIn:  aexp,
+		RefreshToken:     refresh,
+		RefreshExpiresIn: rexp,
+	}, nil
+}
+
 func (a *AuthService) GetMe(userID string) *models.User {
 	return a.storage.GetUserByID(userID)
 }

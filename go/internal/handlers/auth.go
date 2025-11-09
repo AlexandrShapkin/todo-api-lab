@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/AlexandrShapkin/todo-api-lab-go-shared/auth"
 	"github.com/AlexandrShapkin/todo-api-lab-go-shared/utils"
 	"github.com/AlexandrShapkin/todo-api-lab/go/internal/handlers/middleware"
 	"github.com/AlexandrShapkin/todo-api-lab/go/internal/services"
@@ -51,6 +52,31 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp, err := h.service.Login(body.Username, body.Password)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, resp)
+}
+
+func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		RefreshToken string `json:"refreshToken"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, "invalid json")
+		return
+	}
+
+	userID, err := auth.ValidateToken(body.RefreshToken)
+	if err != nil {
+		utils.WriteError(w, http.StatusUnauthorized, "invalid token")
+		return
+	}
+
+	resp, err := h.service.Refresh(userID)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
