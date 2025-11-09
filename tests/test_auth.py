@@ -50,3 +50,10 @@ def test_me():
     body = r.json()
     assert body["username"] == USERNAME
     assert "userId" in body
+
+def test_logout():
+    token = os.getenv("ACCESS_TOKEN")
+    r = requests.post(f"{BASE}/auth/logout", headers={
+        "Authorization": f"Bearer {token}"
+    })
+    assert r.status_code == 204, f"Unexpected status {r.status_code}: {r.text}"
