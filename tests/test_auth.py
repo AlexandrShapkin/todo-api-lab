@@ -11,7 +11,7 @@ def test_register():
         "password": PASSWORD
     })
     assert r.status_code == 201, f"Unexpected status {r.status_code}: {r.text}"
-    
+
     body = r.json()
     for key in ["username", "userId", "accessToken", "refreshToken"]:
         assert key in body, f"Missing {key} in response"
@@ -24,15 +24,10 @@ def test_login():
         "password": PASSWORD
     })
     assert r.status_code == 200, f"Unexpected status {r.status_code}: {r.text}"
-
-    try:
-        body = r.json()
-    except ValueError:
-        assert False, f"Response is not JSON: {r.text}"
-
-    assert "accessToken" in body, f"No accessToken in response: {body}"
+    body = r.json()
+    for key in ["username", "userId", "accessToken", "refreshToken"]:
+        assert key in body, f"Missing {key} in response"
     os.environ["ACCESS_TOKEN"] = body["accessToken"]
-    assert "refreshToken" in body, f"No refreshToken in response: {body}"
     os.environ["REFRESH_TOKEN"] = body["refreshToken"]
 
 def test_refresh():
