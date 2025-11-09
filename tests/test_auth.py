@@ -43,15 +43,10 @@ def test_refresh():
 
 def test_me():
     token = os.getenv("ACCESS_TOKEN")
-    r = requests.post(f"{BASE}/auth/me", headers={
+    r = requests.get(f"{BASE}/auth/me", headers={
         "Authorization": f"Bearer {token}"
-    })    
-
+    })
     assert r.status_code == 200, f"Unexpected status {r.status_code}: {r.text}"
-
-    try:
-        body = r.json()
-    except ValueError:
-        assert False, f"Response is not JSON: {r.text}"
-
-    assert body["username"] == USERNAME, f"Unexpected username: {body}"
+    body = r.json()
+    assert body["username"] == USERNAME
+    assert "userId" in body
