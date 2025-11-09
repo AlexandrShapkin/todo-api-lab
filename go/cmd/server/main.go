@@ -22,6 +22,7 @@ func main() {
 
 	mux.Handle("/v1/auth/register", http.HandlerFunc(authHandler.Register))
 	mux.Handle("/v1/auth/login", http.HandlerFunc(authHandler.Login))
+	mux.Handle("/v1/auth/refresh", http.HandlerFunc(authHandler.Refresh))
 	mux.Handle("/v1/auth/logout", http.HandlerFunc(authHandler.Logout))
 	mux.Handle("/v1/auth/me", middleware.NewJWT(http.HandlerFunc(authHandler.Me)))
 	mux.Handle("/v1/tasks", middleware.NewJWT(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
