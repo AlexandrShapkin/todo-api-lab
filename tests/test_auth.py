@@ -33,6 +33,19 @@ def test_login():
 
     assert "accessToken" in body, f"No accessToken in response: {body}"
     os.environ["ACCESS_TOKEN"] = body["accessToken"]
+    assert "refreshToken" in body, f"No refreshToken in response: {body}"
+    os.environ["REFRESH_TOKEN"] = body["refreshToken"]
+
+def test_refresh():
+    r = requests.post(f"{BASE}/auth/refresh", json={
+        "refreshToken": os.getenv("REFRESH_TOKEN")
+    })
+    assert r.status_code == 200, f"Unexpected status {r.status_code}: {r.text}"
+    body = r.json()
+    for key in ["username", "userId", "accessToken", "refreshToken"]:
+        assert key in body, f"Missing {key} in response"
+    os.environ["ACCESS_TOKEN"] = body["accessToken"]
+    os.environ["REFRESH_TOKEN"] = body["refreshToken"]
 
 def test_me():
     token = os.getenv("ACCESS_TOKEN")
