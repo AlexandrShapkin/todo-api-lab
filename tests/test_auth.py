@@ -10,14 +10,13 @@ def test_register():
         "username": USERNAME,
         "password": PASSWORD
     })
-    assert r.status_code in (200, 201), f"Unexpected status {r.status_code}: {r.text}"
+    assert r.status_code == 201, f"Unexpected status {r.status_code}: {r.text}"
     
-    try:
-        body = r.json()
-    except ValueError:
-        assert False, f"Response is not JSON: {r.text}"
-    
-    assert "accessToken" in body, f"No accessToken in response: {body}"
+    body = r.json()
+    for key in ["username", "userId", "accessToken", "refreshToken"]:
+        assert key in body, f"Missing {key} in response"
+    os.environ["ACCESS_TOKEN"] = body["accessToken"]
+    os.environ["REFRESH_TOKEN"] = body["refreshToken"]
 
 def test_login():
     r = requests.post(f"{BASE}/auth/login", json={
