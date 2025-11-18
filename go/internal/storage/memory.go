@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/AlexandrShapkin/todo-api-lab-go-shared/models"
+	"github.com/AlexandrShapkin/todo-api-lab-go-shared/storage"
 )
 
 type MemoryStorage struct {
@@ -13,7 +14,7 @@ type MemoryStorage struct {
 	userTasks map[string][]string // userID -> tasksIDs
 }
 
-func NewMemoryStorage() *MemoryStorage {
+func NewMemoryStorage() storage.Storage {
 	return &MemoryStorage{
 		users:     make(map[string]*models.User),
 		tasks:     make(map[string]*models.Task),

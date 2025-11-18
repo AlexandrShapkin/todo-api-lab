@@ -5,15 +5,15 @@ import (
 	"time"
 
 	"github.com/AlexandrShapkin/todo-api-lab-go-shared/models"
-	"github.com/AlexandrShapkin/todo-api-lab/go/internal/storage"
+	"github.com/AlexandrShapkin/todo-api-lab-go-shared/storage"
 	"github.com/google/uuid"
 )
 
 type TaskService struct {
-	storage *storage.MemoryStorage
+	storage storage.Storage
 }
 
-func NewTaskService(s *storage.MemoryStorage) *TaskService {
+func NewTaskService(s storage.Storage) *TaskService {
 	return &TaskService{
 		storage: s,
 	}

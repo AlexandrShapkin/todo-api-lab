@@ -6,15 +6,15 @@ import (
 
 	"github.com/AlexandrShapkin/todo-api-lab-go-shared/auth"
 	"github.com/AlexandrShapkin/todo-api-lab-go-shared/models"
-	"github.com/AlexandrShapkin/todo-api-lab/go/internal/storage"
+	"github.com/AlexandrShapkin/todo-api-lab-go-shared/storage"
 	"github.com/google/uuid"
 )
 
 type AuthService struct {
-	storage *storage.MemoryStorage
+	storage storage.Storage
 }
 
-func NewAuthService(s *storage.MemoryStorage) *AuthService {
+func NewAuthService(s storage.Storage) *AuthService {
 	return &AuthService{
 		storage: s,
 	}
